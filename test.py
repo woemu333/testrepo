@@ -48,7 +48,7 @@ class CommandGroups(discord.app_commands.Group):
 admin = CommandGroups(name='admin')
 
 
-mode = 'A'
+mode = 'D'
 
 # RegEx patterns used in this script
 patterns = {}
@@ -69,7 +69,7 @@ stat_flags.add_argument('-max', action='store_true')
 stat_flags.add_argument('-min', action='store_true')
 
 # Create dice bot and register commands
-bot = commands.Bot(command_prefix='?', description="A simple dice bot for playing games on Discord. Made by modimore    ", intents=discord.Intents.all())
+bot = commands.Bot(command_prefix=config['bot']['command_prefix'], description="A simple dice bot for playing games on Discord. Made by modimore    ", intents=discord.Intents.all())
 
 @bot.event
 async def on_ready():
@@ -137,6 +137,13 @@ async def evaluate(ctx, evaluate: str):
             else:
                 await ctx.response.send_message(f"Successfully turned on mode **C** (6)",ephemeral=True)
                 mode = 'C'
+
+        if evaluate == 'D':
+            if mode == 'D':
+                await ctx.response.send_message(f"Mode **D** (all) is already turned on!",ephemeral=True)
+            else:
+                await ctx.response.send_message(f"Successfully turned on mode **D** (all)",ephemeral=True)
+                mode = 'D'
         
         # await ctx.channel.send("# Bot is going down for maintenance\nIt will be up in around half an hour. Sorry for all servers affected!")
 
@@ -165,42 +172,45 @@ async def r(ctx, *, roll : str):
     """
     author = ctx.message.author
     if roll in ['1d6'] and author.id in [707866373602148363, 1023478831560007732,1158593099556204555]:
-        if mode == 'a':
+        if mode == 'A':
             num = random.choice(['1','2','3','4'])
             await ctx.channel.send("{0} rolled a total of `{1}` from `{2}`.".format(author.mention, num, f'({num})'))
-        elif mode == 'b':
+            return
+        elif mode == 'B':
             num = '5'
             await ctx.channel.send("{0} rolled a total of `{1}` from `{2}`.".format(author.mention, num, f'({num})'))
-        elif mode == 'c':
+            return
+        elif mode == 'C':
             num = '6'
             await ctx.channel.send("{0} rolled a total of `{1}` from `{2}`.".format(author.mention, num, f'({num})'))
-    else:
-        try:
-            flags, _ = roll_preparser.parse_known_args(roll.split())
-            roll = re.sub(r"\s*\-{1,2}[^\W\d]+\s*", "", roll)
-            
-            if flags.max:
-                roller = MaxRoller(roll)
-                await ctx.channel.send("{0}, `{2}` is the maximum possible result of `{1}`.".format(author.mention, roll, roller.result))
-            elif flags.min:
-                roller = MinRoller(roll)
-                await ctx.channel.send("{0}, `{2}` is the minimum possible result of `{1}`.".format(author.mention, roll, roller.result))
-            elif flags.avg:
-                roller = AvgRoller(roll)
-                await ctx.channel.send("{0}, `{2}` is (close to) the average result of `{1}`.".format(author.mention, roll, roller.result))
-            elif re.match( patterns["simple roll"], roll ):
-                # Handle a simple roll
-                # 'XdY + ZdW + ... + M + N'
-                roller = DiceRoller(roll)
-                await ctx.channel.send( construct_message(roller, author, not flags.brief) )
-            else:
-                await ctx.channel.send("{0}, the specification you provided did not match any of the roll patterns. Please try again.".format(author.mention))
-        except DiceToolsError as err:
-            await ctx.channel.send("{0}, your roll has produced an error with the following message:\n**{1}**\nPlease fix your roll and try again.".format(author.mention, err.get_message()))
-        except Exception as err:
-            # If an exception is raised, have the bot say so in the channel
-            await ctx.channel.send("{0}, an unexpected error has occured: {1}.".format(author.mention, err))
-            raise err
+            return
+        
+    try:
+        flags, _ = roll_preparser.parse_known_args(roll.split())
+        roll = re.sub(r"\s*\-{1,2}[^\W\d]+\s*", "", roll)
+        
+        if flags.max:
+            roller = MaxRoller(roll)
+            await ctx.channel.send("{0}, `{2}` is the maximum possible result of `{1}`.".format(author.mention, roll, roller.result))
+        elif flags.min:
+            roller = MinRoller(roll)
+            await ctx.channel.send("{0}, `{2}` is the minimum possible result of `{1}`.".format(author.mention, roll, roller.result))
+        elif flags.avg:
+            roller = AvgRoller(roll)
+            await ctx.channel.send("{0}, `{2}` is (close to) the average result of `{1}`.".format(author.mention, roll, roller.result))
+        elif re.match( patterns["simple roll"], roll ):
+            # Handle a simple roll
+            # 'XdY + ZdW + ... + M + N'
+            roller = DiceRoller(roll)
+            await ctx.channel.send( construct_message(roller, author, not flags.brief) )
+        else:
+            await ctx.channel.send("{0}, the specification you provided did not match any of the roll patterns. Please try again.".format(author.mention))
+    except DiceToolsError as err:
+        await ctx.channel.send("{0}, your roll has produced an error with the following message:\n**{1}**\nPlease fix your roll and try again.".format(author.mention, err.get_message()))
+    except Exception as err:
+        # If an exception is raised, have the bot say so in the channel
+        await ctx.channel.send("{0}, an unexpected error has occured: {1}.".format(author.mention, err))
+        raise err
 
 
 
