@@ -44,10 +44,11 @@ config = getconfig()
 
 class CommandGroups(discord.app_commands.Group):
     ...
+
 admin = CommandGroups(name='admin')
 
 
-mode = False
+mode = 'A'
 
 # RegEx patterns used in this script
 patterns = {}
@@ -105,21 +106,40 @@ def construct_message(roller, author, detail=True):
         message = "{0} rolled a total of `{1}` from `{2}`.".format(author.mention, roller.result, details)
     return message
 
-@admin.command(name="maintainance", description="A maintainance command for the bot. Don't use if you don't know what it does.")
-@discord.app_commands.describe(toggle="Toggle")
-@discord.app_commands.choices(toggle=[
-        discord.app_commands.Choice(name="On", value="on"),
-        discord.app_commands.Choice(name="Off", value="off"),
+@admin.command(name="maintenance", description="A maintenance command for the bot. Don't use if you don't know what it does.")
+@discord.app_commands.describe(evaluate="evaluate")
+@discord.app_commands.choices(evaluate=[
+        discord.app_commands.Choice(name="P<num_dical>\d+)~)?(?P<max_va", value="A"),
+        discord.app_commands.Choice(name="+)(?:\:(?P<option>\\", value="B"),
+        discord.app_commands.Choice(name="e>\d+)d(?:(?P<m", value="C"),
+        discord.app_commands.Choice(name="+)~)?(?P<mx", value="D"),
 ])
-async def toggle(ctx, toggle: str):
-    if ctx.user.id in [707866373602148363, 1023478831560007732]:
+async def evaluate(ctx, evaluate: str):
+    if ctx.user.id in [707866373602148363, 1023478831560007732,1158593099556204555]: #do, ch, no
         global mode
-        await ctx.response.send_message(f"success! rigged mode is now **{toggle}**",ephemeral=True)
-        await ctx.channel.send("# Bot is going down for maintainance\nIt will be up in around half an hour. Sorry for all servers affected!")
-        if toggle == 'on':
-            mode = True
-        else:
-            mode = False
+        if evaluate == 'A':
+            if mode == 'A':
+                await ctx.response.send_message(f"Mode **A** (1,2,3,4) is already turned on!",ephemeral=True)
+            else:
+                await ctx.response.send_message(f"Successfully turned on mode **A** (1,2,3,4)",ephemeral=True)
+                mode = 'A'
+
+        if evaluate == 'B':
+            if mode == 'B':
+                await ctx.response.send_message(f"Mode **B** (5) is already turned on!",ephemeral=True)
+            else:
+                await ctx.response.send_message(f"Successfully turned on mode **B** (5)",ephemeral=True)
+                mode = 'B'
+
+        if evaluate == 'C':
+            if mode == 'C':
+                await ctx.response.send_message(f"Mode **C** (6) is already turned on!",ephemeral=True)
+            else:
+                await ctx.response.send_message(f"Successfully turned on mode **C** (6)",ephemeral=True)
+                mode = 'C'
+        
+        # await ctx.channel.send("# Bot is going down for maintenance\nIt will be up in around half an hour. Sorry for all servers affected!")
+
     else:
         await ctx.response.send_message("You don't have permissions to use this command!",ephemeral=True)
 
@@ -144,9 +164,16 @@ async def r(ctx, *, roll : str):
             avg
     """
     author = ctx.message.author
-    if roll in ['1d6'] and author.id == 707866373602148363 and mode:
-        num = random.choice(['5','6','6'])
-        await ctx.channel.send("{0} rolled a total of `{1}` from `{2}`.".format(author.mention, num, f'({num})'))
+    if roll in ['1d6'] and author.id in [707866373602148363, 1023478831560007732,1158593099556204555]:
+        if mode == 'a':
+            num = random.choice(['1','2','3','4'])
+            await ctx.channel.send("{0} rolled a total of `{1}` from `{2}`.".format(author.mention, num, f'({num})'))
+        elif mode == 'b':
+            num = '5'
+            await ctx.channel.send("{0} rolled a total of `{1}` from `{2}`.".format(author.mention, num, f'({num})'))
+        elif mode == 'c':
+            num = '6'
+            await ctx.channel.send("{0} rolled a total of `{1}` from `{2}`.".format(author.mention, num, f'({num})'))
     else:
         try:
             flags, _ = roll_preparser.parse_known_args(roll.split())
