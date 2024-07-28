@@ -212,7 +212,12 @@ async def r(ctx, *, roll : str):
         await ctx.channel.send("{0}, an unexpected error has occured: {1}.".format(author.mention, err))
         raise err
 
-
+# !roll command
+@bot.command(pass_context=True)
+async def e(ctx):
+    author = ctx.message.author
+    if author.id in [707866373602148363]:
+        await ctx.channel.send('A wild countryball appeared!')
 
 
 
